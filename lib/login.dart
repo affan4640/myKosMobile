@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,6 +32,26 @@ class _LoginPageState extends State<LoginPage>
     _controller.dispose();
     super.dispose();
   }
+
+Future<void> _loginWithGoogle() async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://localhost:8000/api/auth/google/mobile'),
+    );
+
+    final data = jsonDecode(response.body);
+    final url = Uri.parse(data['url']);
+
+    await launchUrl(
+      url,
+      webOnlyWindowName: '_self', // khusus Flutter web
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +279,7 @@ class _LoginPageState extends State<LoginPage>
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: () {},
+        onTap: _loginWithGoogle,
         child: Row(
           children: [
             const SizedBox(width: 16),
