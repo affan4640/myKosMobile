@@ -61,6 +61,8 @@ flutter:
     - assets/images/onboarding_illustration.png
     - assets/images/no_kost_illustration.png
     - assets/images/kos.jpg
+    - assets/images/logomykost.png
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

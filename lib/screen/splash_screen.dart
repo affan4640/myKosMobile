@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
           // Background Decor (Gunakan Image.asset jika ada gambar khusus background)
           Container(color: Colors.white),
           Center(
-            child: Image.asset('assets/images/logo-mykost.png', width: 200),
+            child: Image.asset('assets/images/logomykost.png', width: 200),
           ),
         ],
       ),
