@@ -1,96 +1,154 @@
-// lib/services/auth_service.dart
-import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthResult {
   final bool success;
   final String message;
   final String? token;
-
   AuthResult({required this.success, required this.message, this.token});
 }
 
-/// Simple mock AuthService. Replace with real HTTP calls later.
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  String? _token;
+  final String _baseUrl = 'https://chess-gore-patience.ngrok-free.dev/api';
+  final Map<String, String> _headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
+  };
 
-  bool _isEmailValid(String email) {
-    final regex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
-    return regex.hasMatch(email);
+  String? _token;
+  String? get token => _token;
+
+  Future<void> saveUser(String token, String name, String email, String role, {String? phone}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+    await prefs.setString('name', name);
+    await prefs.setString('email', email);
+    await prefs.setString('role', role);
+    await prefs.setString('phone', phone ?? '');
+    _token = token;
+  }
+
+  Future<Map<String, String?>> getUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'token': prefs.getString('token'),
+      'name':  prefs.getString('name'),
+      'email': prefs.getString('email'),
+      'role':  prefs.getString('role'),
+      'phone': prefs.getString('phone'),
+    };
+  }
+
+  Future<void> clearUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    _token = null;
   }
 
   Future<AuthResult> login(String email, String password) async {
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!_isEmailValid(email)) {
-      return AuthResult(success: false, message: 'Email tidak valid');
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/login'),
+        headers: _headers,
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        await saveUser(
+          data['token'],
+          data['user']['name'],
+          data['user']['email'],
+          data['user']['role'] ?? 'tenant',
+          phone: data['user']['phone'],
+        );
+        return AuthResult(success: true, message: data['message'] ?? 'Login berhasil', token: data['token']);
+      } else {
+        return AuthResult(success: false, message: data['message'] ?? 'Login gagal');
+      }
+    } catch (e) {
+      return AuthResult(success: false, message: 'Terjadi kesalahan jaringan');
     }
-    if (password.length < 6) {
-      return AuthResult(success: false, message: 'Password minimal 6 karakter');
-    }
-    _token = 'mock_token_${DateTime.now().millisecondsSinceEpoch}';
-    return AuthResult(success: true, message: 'Login berhasil', token: _token);
   }
 
-  Future<AuthResult> register(
-    String name,
-    String email,
-    String password,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (name.isEmpty) {
-      return AuthResult(success: false, message: 'Nama tidak boleh kosong');
+  Future<AuthResult> register(String name, String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/register'),
+        headers: _headers,
+        body: jsonEncode({'name': name, 'email': email, 'password': password, 'password_confirmation': password}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        return AuthResult(success: true, message: data['message'] ?? 'Pendaftaran berhasil');
+      } else {
+        return AuthResult(success: false, message: data['message'] ?? 'Pendaftaran gagal');
+      }
+    } catch (e) {
+      return AuthResult(success: false, message: 'Terjadi kesalahan jaringan');
     }
-    if (!_isEmailValid(email)) {
-      return AuthResult(success: false, message: 'Email tidak valid');
-    }
-    if (password.length < 6) {
-      return AuthResult(success: false, message: 'Password minimal 6 karakter');
-    }
-    // In a real service you might return the created user or token
-    return AuthResult(success: true, message: 'Pendaftaran berhasil');
   }
 
   Future<AuthResult> sendOtp(String email) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!_isEmailValid(email)) {
-      return AuthResult(success: false, message: 'Email tidak valid');
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/forgot-password'),
+        headers: _headers,
+        body: jsonEncode({'email': email}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return AuthResult(success: true, message: data['message'] ?? 'OTP terkirim');
+      } else {
+        return AuthResult(success: false, message: data['message'] ?? 'Gagal kirim OTP');
+      }
+    } catch (e) {
+      return AuthResult(success: false, message: 'Terjadi kesalahan jaringan');
     }
-    // Simulate sending OTP
-    return AuthResult(
-      success: true,
-      message: 'Kode OTP telah dikirim ke $email',
-    );
   }
 
   Future<AuthResult> verifyOtp(String email, String code) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!_isEmailValid(email)) {
-      return AuthResult(success: false, message: 'Email tidak valid');
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/verify-otp'),
+        headers: _headers,
+        body: jsonEncode({'email': email, 'otp': code}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return AuthResult(success: true, message: data['message'] ?? 'OTP terverifikasi');
+      } else {
+        return AuthResult(success: false, message: data['message'] ?? 'OTP tidak valid');
+      }
+    } catch (e) {
+      return AuthResult(success: false, message: 'Terjadi kesalahan jaringan');
     }
-    if (code.length != 4) {
-      return AuthResult(success: false, message: 'Kode OTP harus 4 digit');
-    }
-    // Accept any 4-digit code in mock
-    return AuthResult(success: true, message: 'OTP terverifikasi');
   }
 
   Future<AuthResult> changePassword(String email, String newPassword) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!_isEmailValid(email)) {
-      return AuthResult(success: false, message: 'Email tidak valid');
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/reset-password'),
+        headers: _headers,
+        body: jsonEncode({'email': email, 'password': newPassword, 'password_confirmation': newPassword}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return AuthResult(success: true, message: data['message'] ?? 'Password berhasil diubah');
+      } else {
+        return AuthResult(success: false, message: data['message'] ?? 'Gagal ubah password');
+      }
+    } catch (e) {
+      return AuthResult(success: false, message: 'Terjadi kesalahan jaringan');
     }
-    if (newPassword.length < 6) {
-      return AuthResult(success: false, message: 'Password minimal 6 karakter');
-    }
-    return AuthResult(success: true, message: 'Password berhasil diubah');
   }
 
-  String? get token => _token;
-
-  void logout() {
-    _token = null;
+  Future<void> logout() async {
+    await clearUser();
   }
 }

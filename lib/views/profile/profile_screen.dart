@@ -7,9 +7,34 @@ import 'transaction_history_screen.dart';
 import 'help_center_screen.dart';
 import '../favorite/favorite_screen.dart';
 import 'settings_screen.dart';
+import '../../services/auth_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _name = '';
+  String _email = '';
+  String _phone = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await AuthService().getUser();
+    setState(() {
+      _name  = user['name'] ?? '';
+      _email = user['email'] ?? '';
+      _phone = user['phone'] ?? '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +43,10 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Akun Saya',
-          style: const TextStyle(
-            color: AppColors.textPrimary, // Warna sudah diatur di theme
+          style: TextStyle(
+            color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -32,35 +57,21 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            Stack(
-              children: [
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppColors.primary,
-                  backgroundImage: AssetImage('assets/profiles/hana.jpg'),
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: AppColors.primary,
+              child: Text(
+                _name.isNotEmpty ? _name[0].toUpperCase() : '?',
+                style: const TextStyle(
+                  fontSize: 36,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 16),
             Text(
-              'SAHRIL SIDIK',
+              _name,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -69,62 +80,47 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'sahrilwfc@email.com',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
+              _email,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
             ),
+            if (_phone.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    _phone,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 32),
-
             _buildMenuTile(
               Icons.person_outline,
               'Edit Profil',
-              () => Get.to(
-                () => const EditProfileScreen(),
-                transition: Transition.fadeIn,
-              ),
+              () async {
+                await Get.to(() => const EditProfileScreen(), transition: Transition.fadeIn);
+                _loadUser();
+              },
             ),
-            _buildMenuTile(
-              Icons.history,
-              'Riwayat Transaksi',
-              () => Get.to(
-                () => const TransactionHistoryScreen(),
-                transition: Transition.fadeIn,
-              ),
-            ),
-            _buildMenuTile(
-              Icons.favorite_border,
-              'Favorit',
-              () => Get.to(
-                () => const FavoriteScreen(),
-                transition: Transition.fadeIn,
-              ),
-            ),
-            _buildMenuTile(
-              Icons.settings_outlined,
-              'Pengaturan',
-              () =>
-                  Get.to(() => SettingsScreen(), transition: Transition.fadeIn),
-            ),
-            _buildMenuTile(
-              Icons.help_outline,
-              'Pusat Bantuan',
-              () => Get.to(
-                () => const HelpCenterScreen(),
-                transition: Transition.fadeIn,
-              ),
-            ),
-
+            _buildMenuTile(Icons.history, 'Riwayat Transaksi',
+                () => Get.to(() => const TransactionHistoryScreen(), transition: Transition.fadeIn)),
+            _buildMenuTile(Icons.favorite_border, 'Favorit',
+                () => Get.to(() => const FavoriteScreen(), transition: Transition.fadeIn)),
+            _buildMenuTile(Icons.settings_outlined, 'Pengaturan',
+                () => Get.to(() => SettingsScreen(), transition: Transition.fadeIn)),
+            _buildMenuTile(Icons.help_outline, 'Pusat Bantuan',
+                () => Get.to(() => const HelpCenterScreen(), transition: Transition.fadeIn)),
             const SizedBox(height: 24),
             ListTile(
               onTap: () {
                 Get.dialog(
                   Dialog(
                     backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
@@ -136,28 +132,16 @@ class ProfileScreen extends StatelessWidget {
                               color: Colors.red.withAlpha((0.1 * 255).round()),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.logout,
-                              color: Colors.red,
-                              size: 32,
-                            ),
+                            child: const Icon(Icons.logout, color: Colors.red, size: 32),
                           ),
                           const SizedBox(height: 20),
-                          Text(
-                            'Keluar Akun',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          const Text('Keluar Akun',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(
+                          const Text(
                             'Apakah Anda yakin ingin keluar dari akun ini?',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
+                            style: TextStyle(color: AppColors.textSecondary, height: 1.5),
                           ),
                           const SizedBox(height: 24),
                           Row(
@@ -165,22 +149,12 @@ class ProfileScreen extends StatelessWidget {
                               Expanded(
                                 child: OutlinedButton(
                                   style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    side: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    side: BorderSide(color: Colors.grey.shade300),
                                   ),
                                   onPressed: () => Get.back(),
-                                  child: Text(
-                                    'Batal',
-                                    style: const TextStyle(
-                                      color: AppColors
-                                          .textSecondary, // Warna sudah diatur di theme
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  child: const Text('Batal',
+                                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -188,23 +162,15 @@ class ProfileScreen extends StatelessWidget {
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     elevation: 0,
                                   ),
-                                  onPressed: () => Get.offAll(
-                                    () => LoginScreen(),
-                                    transition: Transition.fadeIn,
-                                  ),
-                                  child: Text(
-                                    'Keluar',
-                                    style: const TextStyle(
-                                      color: Colors
-                                          .white, // Warna sudah diatur di theme
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  onPressed: () async {
+                                    await AuthService().logout();
+                                    Get.offAll(() => LoginScreen(), transition: Transition.fadeIn);
+                                  },
+                                  child: const Text('Keluar',
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             ],
@@ -223,14 +189,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: const Icon(Icons.logout, color: Colors.red),
               ),
-              title: Text(
-                'Keluar',
-                style: const TextStyle(
-                  color: Colors.red, // Warna sudah diatur di theme
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
+              title: const Text('Keluar',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14)),
             ),
           ],
         ),
@@ -241,10 +201,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenuTile(IconData icon, String title, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         onTap: onTap,
         leading: Container(
@@ -255,19 +212,9 @@ class ProfileScreen extends StatelessWidget {
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600, // Warna sudah diatur di theme
-            fontSize: 14,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: AppColors.textSecondary,
-        ),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary)),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
       ),
     );
   }

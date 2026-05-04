@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'dart:convert';
 import '../views/main_layout.dart';
 import '../views/auth/otp_screen.dart';
 import '../views/auth/change_password_screen.dart';
@@ -11,25 +14,20 @@ class AuthController extends GetxController {
 
   final loginEmail = TextEditingController();
   final loginPassword = TextEditingController();
-
   final isLoading = false.obs;
-
   final recoveryEmail = ''.obs;
 
-  // Register
   final registerName = TextEditingController();
   final registerEmail = TextEditingController();
   final registerPassword = TextEditingController();
   final registerConfirmPassword = TextEditingController();
 
-  // Forgot / OTP
   final forgotEmail = TextEditingController();
   final otp1 = TextEditingController();
   final otp2 = TextEditingController();
   final otp3 = TextEditingController();
   final otp4 = TextEditingController();
 
-  // Change password
   final newPassword = TextEditingController();
   final confirmNewPassword = TextEditingController();
 
@@ -57,9 +55,7 @@ class AuthController extends GetxController {
   }
 
   void _showError(String message) {
-    Get.snackbar(
-      'Oops! Gagal',
-      message,
+    Get.snackbar('Oops! Gagal', message,
       backgroundColor: Colors.red.shade600,
       colorText: Colors.white,
       icon: const Icon(Icons.error_outline, color: Colors.white, size: 28),
@@ -72,16 +68,10 @@ class AuthController extends GetxController {
   }
 
   void _showSuccess(String title, String message) {
-    Get.snackbar(
-      title,
-      message,
+    Get.snackbar(title, message,
       backgroundColor: Colors.green.shade600,
       colorText: Colors.white,
-      icon: const Icon(
-        Icons.check_circle_outline,
-        color: Colors.white,
-        size: 28,
-      ),
+      icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 28),
       margin: const EdgeInsets.all(16),
       borderRadius: 16,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -93,18 +83,9 @@ class AuthController extends GetxController {
   Future<void> login() async {
     final email = loginEmail.text.trim();
     final pass = loginPassword.text;
-    if (email.isEmpty || pass.isEmpty) {
-      _showError('Email dan password harus diisi');
-      return;
-    }
-    if (!_isEmailValid(email)) {
-      _showError('Email tidak valid');
-      return;
-    }
-    if (pass.length < 6) {
-      _showError('Password minimal 6 karakter');
-      return;
-    }
+    if (email.isEmpty || pass.isEmpty) { _showError('Email dan password harus diisi'); return; }
+    if (!_isEmailValid(email)) { _showError('Email tidak valid'); return; }
+    if (pass.length < 6) { _showError('Password minimal 6 karakter'); return; }
 
     try {
       isLoading.value = true;
@@ -125,28 +106,14 @@ class AuthController extends GetxController {
   }
 
   Future<void> register() async {
-    // synchronous validation and then async call
     final name = registerName.text.trim();
     final email = registerEmail.text.trim();
     final pass = registerPassword.text;
     final confirm = registerConfirmPassword.text;
-
-    if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
-      _showError('Semua bidang harus diisi');
-      return;
-    }
-    if (!_isEmailValid(email)) {
-      _showError('Email tidak valid');
-      return;
-    }
-    if (pass.length < 6) {
-      _showError('Password minimal 6 karakter');
-      return;
-    }
-    if (pass != confirm) {
-      _showError('Password tidak cocok');
-      return;
-    }
+    if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) { _showError('Semua bidang harus diisi'); return; }
+    if (!_isEmailValid(email)) { _showError('Email tidak valid'); return; }
+    if (pass.length < 6) { _showError('Password minimal 6 karakter'); return; }
+    if (pass != confirm) { _showError('Password tidak cocok'); return; }
 
     try {
       isLoading.value = true;
@@ -170,16 +137,8 @@ class AuthController extends GetxController {
 
   void sendOtp() {
     final email = forgotEmail.text.trim();
-    if (email.isEmpty) {
-      _showError('Masukkan email terlebih dahulu');
-      return;
-    }
-    if (!_isEmailValid(email)) {
-      _showError('Email tidak valid');
-      return;
-    }
-
-    // call service then navigate
+    if (email.isEmpty) { _showError('Masukkan email terlebih dahulu'); return; }
+    if (!_isEmailValid(email)) { _showError('Email tidak valid'); return; }
     () async {
       try {
         isLoading.value = true;
@@ -189,69 +148,38 @@ class AuthController extends GetxController {
           recoveryEmail.value = email;
           Get.to(() => OtpScreen());
           _showSuccess('OTP Terkirim', res.message);
-        } else {
-          _showError(res.message);
-        }
-      } catch (e) {
-        isLoading.value = false;
-        _showError('Terjadi kesalahan jaringan');
-      }
+        } else { _showError(res.message); }
+      } catch (e) { isLoading.value = false; _showError('Terjadi kesalahan jaringan'); }
     }();
   }
 
   void verifyOtp() {
     final otp = otp1.text + otp2.text + otp3.text + otp4.text;
-    if (otp.length != 4) {
-      _showError('Masukkan kode 4 digit dengan benar');
-      return;
-    }
-
-    // call verify otp
+    if (otp.length != 4) { _showError('Masukkan kode 4 digit dengan benar'); return; }
     () async {
       try {
         isLoading.value = true;
         final res = await _authService.verifyOtp(
-          recoveryEmail.value.isEmpty
-              ? forgotEmail.text.trim()
-              : recoveryEmail.value,
-          otp,
-        );
+          recoveryEmail.value.isEmpty ? forgotEmail.text.trim() : recoveryEmail.value, otp);
         isLoading.value = false;
         if (res.success) {
           Get.to(() => ChangePasswordScreen());
           _showSuccess('Verifikasi Berhasil', res.message);
-        } else {
-          _showError(res.message);
-        }
-      } catch (e) {
-        isLoading.value = false;
-        _showError('Terjadi kesalahan jaringan');
-      }
+        } else { _showError(res.message); }
+      } catch (e) { isLoading.value = false; _showError('Terjadi kesalahan jaringan'); }
     }();
   }
 
   void changePassword() {
     final pass = newPassword.text;
     final confirm = confirmNewPassword.text;
-    if (pass.isEmpty || confirm.isEmpty) {
-      _showError('Semua bidang password harus diisi');
-      return;
-    }
-    if (pass.length < 6) {
-      _showError('Password minimal 6 karakter');
-      return;
-    }
-    if (pass != confirm) {
-      _showError('Password baru dan konfirmasi tidak cocok');
-      return;
-    }
-
+    if (pass.isEmpty || confirm.isEmpty) { _showError('Semua bidang password harus diisi'); return; }
+    if (pass.length < 6) { _showError('Password minimal 6 karakter'); return; }
+    if (pass != confirm) { _showError('Password baru dan konfirmasi tidak cocok'); return; }
     () async {
       try {
         isLoading.value = true;
-        final email = recoveryEmail.value.isEmpty
-            ? forgotEmail.text.trim()
-            : recoveryEmail.value;
+        final email = recoveryEmail.value.isEmpty ? forgotEmail.text.trim() : recoveryEmail.value;
         final res = await _authService.changePassword(email, pass);
         isLoading.value = false;
         if (res.success) {
@@ -259,13 +187,49 @@ class AuthController extends GetxController {
           confirmNewPassword.clear();
           Get.offAll(() => LoginScreen());
           _showSuccess('Berhasil Ubah Password', res.message);
-        } else {
-          _showError(res.message);
-        }
-      } catch (e) {
-        isLoading.value = false;
-        _showError('Terjadi kesalahan jaringan');
-      }
+        } else { _showError(res.message); }
+      } catch (e) { isLoading.value = false; _showError('Terjadi kesalahan jaringan'); }
     }();
+  }
+
+  Future<void> loginWithGoogle() async {
+    try {
+      isLoading.value = true;
+      final response = await http.get(
+        Uri.parse('https://chess-gore-patience.ngrok-free.dev/api/auth/google/mobile?platform=mobile'),
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          'Accept': 'application/json',
+          'User-Agent': 'FlutterApp',
+        },
+      );
+      isLoading.value = false;
+
+      final data = jsonDecode(response.body);
+      final googleUrl = data['url'] as String;
+
+      final result = await FlutterWebAuth2.authenticate(
+        url: googleUrl,
+        callbackUrlScheme: 'mykost',
+      );
+
+      final uri   = Uri.parse(result);
+      final token = uri.queryParameters['token'];
+      final name  = uri.queryParameters['name'] ?? '';
+      final email = uri.queryParameters['email'] ?? '';
+      final role  = uri.queryParameters['role'] ?? 'tenant';
+
+      if (token != null) {
+        // ✅ Simpan user ke SharedPreferences
+        await _authService.saveUser(token, name, email, role);
+        Get.offAll(() => MainLayout());
+        _showSuccess('Berhasil Masuk', 'Selamat datang, $name!');
+      } else {
+        _showError('Token tidak ditemukan');
+      }
+    } catch (e) {
+      isLoading.value = false;
+      _showError('Login Google gagal: $e');
+    }
   }
 }

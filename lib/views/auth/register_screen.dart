@@ -189,40 +189,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
 
               const SizedBox(height: 16),
-              Column(
-                children: [
-                  OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: const Size.fromHeight(48),
+              Obx(
+                () => OutlinedButton(
+                  onPressed: authC.isLoading.value
+                      ? null
+                      : () => authC.loginWithGoogle(),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      'Daftar dengan Gmail',
-                      style: const TextStyle(color: AppColors.primary),
-                    ),
+                    minimumSize: const Size.fromHeight(48),
                   ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/logos/google.png', height: 20),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Daftar dengan Google',
+                        style: TextStyle(color: AppColors.primary),
                       ),
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                    child: Text(
-                      'Daftar dengan Apple',
-                      style: const TextStyle(color: AppColors.primary),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
 
               const SizedBox(height: 20),
