@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controllers/main_controller.dart';
 import '../../theme/app_colors.dart';
 import '../../models/kost_model.dart';
 import '../detail/detail_screen.dart';
@@ -15,6 +16,9 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final HomeController homeC = Get.put(HomeController());
+    final MainController mainC = Get.isRegistered<MainController>()
+        ? Get.find<MainController>()
+        : Get.put(MainController());
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -90,8 +94,11 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                   child: TextField(
-                    readOnly: true,
-                    onTap: () => Get.to(() => SearchScreen()),
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (value) {
+                      FocusScope.of(context).unfocus();
+                      mainC.openSearchTab(query: value);
+                    },
                     decoration: InputDecoration(
                       hintText: 'Cari lokasi, nama kost, atau fasilitas',
                       hintStyle: const TextStyle(
@@ -103,16 +110,20 @@ class HomeScreen extends StatelessWidget {
                         Icons.search,
                         color: AppColors.textSecondary,
                       ),
-                      suffixIcon: Container(
-                        margin: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.tune,
-                          color: Colors.white,
-                          size: 18,
+                      suffixIcon: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Get.to(() => SearchScreen()),
+                        child: Container(
+                          margin: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.tune,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ),
@@ -185,7 +196,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => Get.to(() => SearchScreen()),
+                      onPressed: () => mainC.openSearchTab(),
                       child: const Text(
                         'Lihat Semua >',
                         style: TextStyle(
@@ -468,7 +479,12 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             TextButton(
-              onPressed: () => Get.to(() => SearchScreen()),
+              onPressed: () {
+                final mainC = Get.isRegistered<MainController>()
+                    ? Get.find<MainController>()
+                    : Get.put(MainController());
+                mainC.openSearchTab();
+              },
               child: const Text(
                 'Lihat Semua >',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/main_controller.dart';
 import '../theme/app_colors.dart';
 import 'home/home_screen.dart';
-import 'search/search_screen.dart';
+import 'search/search_all_kost_screen.dart';
 import 'kost/my_kost_screen.dart';
 import 'chat/chat_screen.dart';
 import 'profile/profile_screen.dart';
@@ -11,31 +11,30 @@ import 'profile/profile_screen.dart';
 class MainLayout extends StatelessWidget {
   final MainController controller = Get.put(MainController());
 
-  // Dummy screens untuk tab lainnya
-  final List<Widget> pages = [
-    HomeScreen(),
-    SearchScreen(),
-    MyKostScreen(),
-    ChatScreen(),
-    ProfileScreen(),
-  ];
-
   MainLayout({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Obx(
-        () => AnimatedSwitcher(
+      body: Obx(() {
+        final index = controller.currentIndex.value;
+        final query = controller.searchQuery.value;
+
+        final pages = [
+          HomeScreen(),
+          SearchAllKostScreen(initialQuery: query.isEmpty ? null : query),
+          MyKostScreen(),
+          ChatScreen(),
+          ProfileScreen(),
+        ];
+
+        return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           switchInCurve: Curves.easeIn,
           switchOutCurve: Curves.easeOut,
-          child: Container(
-            key: ValueKey<int>(controller.currentIndex.value),
-            child: pages[controller.currentIndex.value],
-          ),
-        ),
-      ),
+          child: Container(key: ValueKey<int>(index), child: pages[index]),
+        );
+      }),
       bottomNavigationBar: Obx(
         () => SizedBox(
           height: 70 + MediaQuery.of(context).padding.bottom,
