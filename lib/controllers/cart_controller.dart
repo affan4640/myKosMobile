@@ -1,13 +1,9 @@
 import 'package:get/get.dart';
 import '../models/cart_item_model.dart';
-import '../models/kost_model.dart';
 
 class CartController extends GetxController {
   // Mock Data: Anggap saja pengguna sudah memasukkan 2 kost ini ke keranjang
-  var cartItems = <CartItem>[
-    CartItem(kost: mockKosts[0], duration: 1),
-    CartItem(kost: mockKosts[1], duration: 3),
-  ].obs;
+  var cartItems = <CartItem>[].obs;
 
   // Getter untuk menghitung total harga dinamis
   int get totalPrice {

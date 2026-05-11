@@ -1,22 +1,31 @@
 import 'package:get/get.dart';
 import '../models/kost_model.dart';
+import '../services/kost_service.dart';
 
 class FavoriteController extends GetxController {
+  final KostService _kostService = KostService();
+
   var favorites = <Kost>[].obs;
   var selectedSort = 'Terbaru'.obs;
+  var isLoading = false.obs;
 
-  // Menyimpan urutan asli sebelum diurutkan untuk fitur "Terbaru"
   List<Kost> _originalFavorites = [];
 
   @override
   void onInit() {
     super.onInit();
-    // Simulasi memuat data favorit dari model (mockKosts)
-    _originalFavorites = List.from(mockKosts);
-    favorites.assignAll(_originalFavorites);
+    fetchFavorites();
   }
 
-  void removeFavorite(String id) {
+  Future<void> fetchFavorites() async {
+    isLoading.value = true;
+    final result = await _kostService.getProperties();
+    _originalFavorites = List.from(result);
+    favorites.assignAll(_originalFavorites);
+    isLoading.value = false;
+  }
+
+  void removeFavorite(int id) {
     favorites.removeWhere((item) => item.id == id);
     _originalFavorites.removeWhere((item) => item.id == id);
   }

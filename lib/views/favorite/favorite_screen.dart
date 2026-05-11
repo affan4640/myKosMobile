@@ -121,7 +121,7 @@ class FavoriteScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final kost = controller.favorites[index];
                   return Dismissible(
-                    key: Key(kost.id),
+                    key: ValueKey(kost.id),
                     direction: DismissDirection.endToStart,
                     background: Container(
                       alignment: Alignment.centerRight,

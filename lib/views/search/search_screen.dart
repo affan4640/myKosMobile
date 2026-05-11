@@ -46,7 +46,7 @@ class SearchScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Lokasi',
+              'Nama atau Lokasi',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 12),

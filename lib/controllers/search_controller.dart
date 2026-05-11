@@ -2,27 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import '../models/kost_model.dart';
+import '../services/kost_service.dart';
 import '../views/search/search_result_screen.dart';
 
 class SearchKostController extends GetxController {
-  final locationController = TextEditingController();
+  final KostService _kostService = KostService();
 
+  final locationController = TextEditingController();
   final selectedType = 'Semua'.obs;
   final kostTypes = ['Semua', 'Putra', 'Putri', 'Campuran'];
-
-  final priceRange = const RangeValues(500000, 3000000).obs;
+  final priceRange = const RangeValues(0, 2000000).obs;
 
   final facilities = [
-    'Wi-Fi',
+    'Kamar Mandi Dalam',
     'AC',
-    'K. Mandi Dalam',
-    'Dapur',
-    'Parkir',
+    'WiFi',
+    'Parkir Motor',
+    'Dapur Bersama',
     'CCTV',
-    'Keamanan 24 Jam',
-    'Laundry',
+    'Penjaga 24 Jam',
+    'Kipas Angin',
   ];
-  final selectedFacilities = <String>['Wi-Fi', 'AC', 'K. Mandi Dalam'].obs;
+
+  final selectedFacilities = <String>[].obs;
 
   @override
   void onClose() {
@@ -33,7 +36,7 @@ class SearchKostController extends GetxController {
   void resetFilters() {
     locationController.clear();
     selectedType.value = 'Semua';
-    priceRange.value = const RangeValues(500000, 3000000);
+    priceRange.value = const RangeValues(0, 2000000);
     selectedFacilities.clear();
   }
 
@@ -43,6 +46,20 @@ class SearchKostController extends GetxController {
     } else {
       selectedFacilities.remove(facility);
     }
+  }
+
+  Future<List<Kost>> _fetchFiltered() async {
+    final result = await _kostService.getProperties(
+      type: selectedType.value == 'Semua' ? null : selectedType.value,
+      search: locationController.text.trim().isEmpty
+          ? null
+          : locationController.text.trim(),
+    );
+
+    return result.where((kost) {
+      return kost.price >= priceRange.value.start &&
+          kost.price <= priceRange.value.end;
+    }).toList();
   }
 
   void applyFilters() {
@@ -106,17 +123,20 @@ class SearchKostController extends GetxController {
       barrierDismissible: false,
     );
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      Get.back(); // Tutup dialog loading
-      Get.to(
-        () => SearchResultScreen(
-          location: locationController.text.trim(),
-          type: selectedType.value,
-          minPrice: priceRange.value.start.toInt(),
-          maxPrice: priceRange.value.end.toInt(),
-          facilities: selectedFacilities.toList(),
-        ),
-      );
+    _fetchFiltered().then((results) {
+      Get.back();
+      Get.to(() => SearchResultScreen(
+            location: locationController.text.trim(),
+            type: selectedType.value,
+            minPrice: priceRange.value.start.toInt(),
+            maxPrice: priceRange.value.end.toInt(),
+            facilities: selectedFacilities.toList(),
+            results: results,
+          ));
+    }).catchError((_) {
+      Get.back();
+      Get.snackbar('Error', 'Gagal memuat data kost',
+          backgroundColor: Colors.red, colorText: Colors.white);
     });
   }
 }

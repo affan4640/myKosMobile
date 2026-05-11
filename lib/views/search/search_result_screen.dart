@@ -1,8 +1,8 @@
-// lib/views/search/search_result_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../theme/app_colors.dart';
 import '../../models/kost_model.dart';
+import '../../services/kost_service.dart';
 import '../detail/detail_screen.dart';
 
 class SearchResultScreen extends StatefulWidget {
@@ -11,6 +11,7 @@ class SearchResultScreen extends StatefulWidget {
   final int minPrice;
   final int maxPrice;
   final List<String> facilities;
+  final List<Kost> results;
 
   const SearchResultScreen({
     super.key,
@@ -19,6 +20,7 @@ class SearchResultScreen extends StatefulWidget {
     required this.minPrice,
     required this.maxPrice,
     required this.facilities,
+    required this.results,
   });
 
   @override
@@ -26,49 +28,31 @@ class SearchResultScreen extends StatefulWidget {
 }
 
 class _SearchResultScreenState extends State<SearchResultScreen> {
-  late String _selectedFilter;
-  final List<String> _filters = [
-    'Semua',
-    'Terdekat',
-    'Termurah',
-    'Putra',
-    'Putri',
-    'Campuran',
-  ];
+  final KostService _kostService = KostService();
+  late List<Kost> _displayResults;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Mengambil filter tipe kost awal dari layar pencarian sebelumnya
-    _selectedFilter = widget.type;
+    _displayResults = List.from(widget.results);
+  }
+
+  Future<void> _fetchAll() async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await _kostService.getProperties();
+      setState(() {
+        _displayResults = result;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Kost> baseData = _selectedFilter == 'Terdekat'
-        ? nearbyKosts
-        : mockKosts;
-
-    var results = baseData.where((kost) {
-      final matchType =
-          (_selectedFilter == 'Semua' ||
-              _selectedFilter == 'Terdekat' ||
-              _selectedFilter == 'Termurah')
-          ? true
-          : kost.type == _selectedFilter;
-      final matchLocation =
-          widget.location.isEmpty ||
-          kost.location.toLowerCase().contains(widget.location.toLowerCase());
-      final matchPrice =
-          kost.price >= widget.minPrice && kost.price <= widget.maxPrice;
-
-      return matchType && matchLocation && matchPrice;
-    }).toList();
-
-    if (_selectedFilter == 'Termurah') {
-      results.sort((a, b) => a.price.compareTo(b.price));
-    }
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -87,216 +71,196 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
           ),
         ),
         centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Row(
-              children: _filters.map((filter) {
-                final isSelected = _selectedFilter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    label: Text(filter),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: isSelected
-                            ? AppColors.primary
-                            : Colors.grey.shade300,
-                      ),
-                    ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() {
-                          _selectedFilter = filter;
-                        });
-                      }
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          Expanded(
-            child: results.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 80,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Oops! Kost tidak ditemukan',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Coba sesuaikan filter pencarianmu.',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: results.length,
-                    itemBuilder: (context, index) {
-                      final kost = results[index];
-                      return GestureDetector(
-                        onTap: () => Get.to(() => DetailScreen(kost: kost)),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(
-                                  (0.02 * 255).round(),
-                                ),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.horizontal(
-                                  left: Radius.circular(16),
-                                ),
-                                child: Image.asset(
-                                  kost.imageUrl,
-                                  width: 120,
-                                  height: 120,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withAlpha(
-                                            (0.1 * 255).round(),
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          kost.type,
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        kost.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.location_on,
-                                            size: 12,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Expanded(
-                                            child: Text(
-                                              kost.location,
-                                              style: const TextStyle(
-                                                color: AppColors.textSecondary,
-                                                fontSize: 11,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'Rp${kost.price}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.primary,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.star,
-                                                size: 14,
-                                                color: AppColors.warning,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '${kost.rating}',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
+            onPressed: _fetchAll,
           ),
         ],
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _displayResults.isEmpty
+              ? _buildEmptyState()
+              : _buildListResults(),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          const Text(
+            'Oops! Kost tidak ditemukan',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Coba sesuaikan filter pencarianmu.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListResults() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: _displayResults.length,
+      itemBuilder: (context, index) {
+        final kost = _displayResults[index];
+        return GestureDetector(
+          onTap: () => Get.to(() => DetailScreen(kost: kost)),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha((0.02 * 255).round()),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _buildImage(kost.imageUrl),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBadge(kost.type),
+                        const SizedBox(height: 6),
+                        Text(
+                          kost.name,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        _buildLocationInfo(kost.location),
+                        if (kost.distance > 0) _buildDistanceInfo(kost.distance),
+                        const SizedBox(height: 8),
+                        _buildPriceAndRating(kost.price, kost.rating),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildImage(String url) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+      child: url.startsWith('http')
+          ? Image.network(
+              url,
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 120,
+                height: 120,
+                color: Colors.grey.shade200,
+                child: const Icon(Icons.image_not_supported),
+              ),
+            )
+          : Image.asset(
+              url,
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
+    );
+  }
+
+  Widget _buildBadge(String type) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withAlpha((0.1 * 255).round()),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        type,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationInfo(String location) {
+    return Row(
+      children: [
+        const Icon(Icons.location_on, size: 12, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            location,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDistanceInfo(double distance) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.near_me, size: 12, color: AppColors.primary),
+          const SizedBox(width: 4),
+          Text(
+            '${distance.toStringAsFixed(1)} km',
+            style: const TextStyle(color: AppColors.primary, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceAndRating(int price, double rating) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Rp$price',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+            fontSize: 14,
+          ),
+        ),
+        Row(
+          children: [
+            const Icon(Icons.star, size: 14, color: AppColors.warning),
+            const SizedBox(width: 4),
+            Text('$rating',
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ],
     );
   }
 }

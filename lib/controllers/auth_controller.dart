@@ -55,7 +55,9 @@ class AuthController extends GetxController {
   }
 
   void _showError(String message) {
-    Get.snackbar('Oops! Gagal', message,
+    Get.snackbar(
+      'Oops! Gagal',
+      message,
       backgroundColor: Colors.red.shade600,
       colorText: Colors.white,
       icon: const Icon(Icons.error_outline, color: Colors.white, size: 28),
@@ -68,10 +70,16 @@ class AuthController extends GetxController {
   }
 
   void _showSuccess(String title, String message) {
-    Get.snackbar(title, message,
+    Get.snackbar(
+      title,
+      message,
       backgroundColor: Colors.green.shade600,
       colorText: Colors.white,
-      icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 28),
+      icon: const Icon(
+        Icons.check_circle_outline,
+        color: Colors.white,
+        size: 28,
+      ),
       margin: const EdgeInsets.all(16),
       borderRadius: 16,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -83,15 +91,25 @@ class AuthController extends GetxController {
   Future<void> login() async {
     final email = loginEmail.text.trim();
     final pass = loginPassword.text;
-    if (email.isEmpty || pass.isEmpty) { _showError('Email dan password harus diisi'); return; }
-    if (!_isEmailValid(email)) { _showError('Email tidak valid'); return; }
-    if (pass.length < 6) { _showError('Password minimal 6 karakter'); return; }
+    if (email.isEmpty || pass.isEmpty) {
+      _showError('Email dan password harus diisi');
+      return;
+    }
+    if (!_isEmailValid(email)) {
+      _showError('Email tidak valid');
+      return;
+    }
+    if (pass.length < 6) {
+      _showError('Password minimal 6 karakter');
+      return;
+    }
 
     try {
       isLoading.value = true;
       final res = await _authService.login(email, pass);
       isLoading.value = false;
       if (res.success) {
+        await _authService.fetchAndSaveUserFromApi();
         loginEmail.clear();
         loginPassword.clear();
         Get.offAll(() => MainLayout());
@@ -110,10 +128,22 @@ class AuthController extends GetxController {
     final email = registerEmail.text.trim();
     final pass = registerPassword.text;
     final confirm = registerConfirmPassword.text;
-    if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) { _showError('Semua bidang harus diisi'); return; }
-    if (!_isEmailValid(email)) { _showError('Email tidak valid'); return; }
-    if (pass.length < 6) { _showError('Password minimal 6 karakter'); return; }
-    if (pass != confirm) { _showError('Password tidak cocok'); return; }
+    if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
+      _showError('Semua bidang harus diisi');
+      return;
+    }
+    if (!_isEmailValid(email)) {
+      _showError('Email tidak valid');
+      return;
+    }
+    if (pass.length < 6) {
+      _showError('Password minimal 6 karakter');
+      return;
+    }
+    if (pass != confirm) {
+      _showError('Password tidak cocok');
+      return;
+    }
 
     try {
       isLoading.value = true;
@@ -137,8 +167,14 @@ class AuthController extends GetxController {
 
   void sendOtp() {
     final email = forgotEmail.text.trim();
-    if (email.isEmpty) { _showError('Masukkan email terlebih dahulu'); return; }
-    if (!_isEmailValid(email)) { _showError('Email tidak valid'); return; }
+    if (email.isEmpty) {
+      _showError('Masukkan email terlebih dahulu');
+      return;
+    }
+    if (!_isEmailValid(email)) {
+      _showError('Email tidak valid');
+      return;
+    }
     () async {
       try {
         isLoading.value = true;
@@ -148,38 +184,66 @@ class AuthController extends GetxController {
           recoveryEmail.value = email;
           Get.to(() => OtpScreen());
           _showSuccess('OTP Terkirim', res.message);
-        } else { _showError(res.message); }
-      } catch (e) { isLoading.value = false; _showError('Terjadi kesalahan jaringan'); }
+        } else {
+          _showError(res.message);
+        }
+      } catch (e) {
+        isLoading.value = false;
+        _showError('Terjadi kesalahan jaringan');
+      }
     }();
   }
 
   void verifyOtp() {
     final otp = otp1.text + otp2.text + otp3.text + otp4.text;
-    if (otp.length != 4) { _showError('Masukkan kode 4 digit dengan benar'); return; }
+    if (otp.length != 4) {
+      _showError('Masukkan kode 4 digit dengan benar');
+      return;
+    }
     () async {
       try {
         isLoading.value = true;
         final res = await _authService.verifyOtp(
-          recoveryEmail.value.isEmpty ? forgotEmail.text.trim() : recoveryEmail.value, otp);
+          recoveryEmail.value.isEmpty
+              ? forgotEmail.text.trim()
+              : recoveryEmail.value,
+          otp,
+        );
         isLoading.value = false;
         if (res.success) {
           Get.to(() => ChangePasswordScreen());
           _showSuccess('Verifikasi Berhasil', res.message);
-        } else { _showError(res.message); }
-      } catch (e) { isLoading.value = false; _showError('Terjadi kesalahan jaringan'); }
+        } else {
+          _showError(res.message);
+        }
+      } catch (e) {
+        isLoading.value = false;
+        _showError('Terjadi kesalahan jaringan');
+      }
     }();
   }
 
   void changePassword() {
     final pass = newPassword.text;
     final confirm = confirmNewPassword.text;
-    if (pass.isEmpty || confirm.isEmpty) { _showError('Semua bidang password harus diisi'); return; }
-    if (pass.length < 6) { _showError('Password minimal 6 karakter'); return; }
-    if (pass != confirm) { _showError('Password baru dan konfirmasi tidak cocok'); return; }
+    if (pass.isEmpty || confirm.isEmpty) {
+      _showError('Semua bidang password harus diisi');
+      return;
+    }
+    if (pass.length < 6) {
+      _showError('Password minimal 6 karakter');
+      return;
+    }
+    if (pass != confirm) {
+      _showError('Password baru dan konfirmasi tidak cocok');
+      return;
+    }
     () async {
       try {
         isLoading.value = true;
-        final email = recoveryEmail.value.isEmpty ? forgotEmail.text.trim() : recoveryEmail.value;
+        final email = recoveryEmail.value.isEmpty
+            ? forgotEmail.text.trim()
+            : recoveryEmail.value;
         final res = await _authService.changePassword(email, pass);
         isLoading.value = false;
         if (res.success) {
@@ -187,8 +251,13 @@ class AuthController extends GetxController {
           confirmNewPassword.clear();
           Get.offAll(() => LoginScreen());
           _showSuccess('Berhasil Ubah Password', res.message);
-        } else { _showError(res.message); }
-      } catch (e) { isLoading.value = false; _showError('Terjadi kesalahan jaringan'); }
+        } else {
+          _showError(res.message);
+        }
+      } catch (e) {
+        isLoading.value = false;
+        _showError('Terjadi kesalahan jaringan');
+      }
     }();
   }
 
@@ -196,7 +265,9 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       final response = await http.get(
-        Uri.parse('https://chess-gore-patience.ngrok-free.dev/api/auth/google/mobile?platform=mobile'),
+        Uri.parse(
+          'https://chess-gore-patience.ngrok-free.dev/api/auth/google/mobile?platform=mobile',
+        ),
         headers: {
           'ngrok-skip-browser-warning': 'true',
           'Accept': 'application/json',
@@ -213,15 +284,15 @@ class AuthController extends GetxController {
         callbackUrlScheme: 'mykost',
       );
 
-      final uri   = Uri.parse(result);
+      final uri = Uri.parse(result);
       final token = uri.queryParameters['token'];
-      final name  = uri.queryParameters['name'] ?? '';
+      final name = uri.queryParameters['name'] ?? '';
       final email = uri.queryParameters['email'] ?? '';
-      final role  = uri.queryParameters['role'] ?? 'tenant';
+      final role = uri.queryParameters['role'] ?? 'tenant';
 
       if (token != null) {
-        // ✅ Simpan user ke SharedPreferences
         await _authService.saveUser(token, name, email, role);
+        await _authService.fetchAndSaveUserFromApi();
         Get.offAll(() => MainLayout());
         _showSuccess('Berhasil Masuk', 'Selamat datang, $name!');
       } else {
@@ -231,5 +302,10 @@ class AuthController extends GetxController {
       isLoading.value = false;
       _showError('Login Google gagal: $e');
     }
+  }
+
+  Future<void> logout() async {
+    await _authService.logout();
+    Get.offAll(() => LoginScreen());
   }
 }
