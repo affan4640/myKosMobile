@@ -123,18 +123,24 @@ class SearchKostController extends GetxController {
       barrierDismissible: false,
     );
 
-    _fetchFiltered().then((results) {
-      Get.back();
-      Get.to(
-        () => SearchAllKostScreen(
-          initialQuery: locationController.text.trim(),
-          initialResults: results,
-        ),
-      );
-    }).catchError((_) {
-      Get.back();
-      Get.snackbar('Error', 'Gagal memuat data kost',
-          backgroundColor: Colors.red, colorText: Colors.white);
-    });
+    _fetchFiltered()
+        .then((results) {
+          Get.back();
+          Get.to(
+            () => SearchAllKostScreen(
+              initialQuery: locationController.text.trim(),
+              initialResults: results,
+            ),
+          );
+        })
+        .catchError((_) {
+          Get.back();
+          Get.snackbar(
+            'Error',
+            'Gagal memuat data kost',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        });
   }
 }

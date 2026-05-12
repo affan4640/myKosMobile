@@ -18,33 +18,31 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
 
-    return Obx(() => GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'MyKost',
+    return Obx(
+      () => GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'MyKost',
 
-          theme: ThemeData(
-            brightness: Brightness.light,
-            primaryColor: AppColors.primary,
-            scaffoldBackgroundColor: AppColors.background,
-            textTheme: GoogleFonts.poppinsTextTheme(),
-          ),
+        theme: ThemeData(
+          brightness: Brightness.light,
+          primaryColor: AppColors.primary,
+          scaffoldBackgroundColor: AppColors.background,
+          textTheme: GoogleFonts.poppinsTextTheme(),
+        ),
 
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          primaryColor: AppColors.primary,
+          scaffoldBackgroundColor: const Color(0xFF121212),
+          textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+        ),
 
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            primaryColor: AppColors.primary,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            textTheme: GoogleFonts.poppinsTextTheme(
-              ThemeData.dark().textTheme,
-            ),
-          ),
+        themeMode: themeController.isDarkMode.value
+            ? ThemeMode.dark
+            : ThemeMode.light,
 
-
-          themeMode: themeController.isDarkMode.value
-              ? ThemeMode.dark
-              : ThemeMode.light,
-
-          home: const SplashScreen(),
-        ));
+        home: const SplashScreen(),
+      ),
+    );
   }
 }

@@ -30,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUser() async {
     final user = await AuthService().getUser();
     setState(() {
-      _name  = user['name'] ?? '';
+      _name = user['name'] ?? '';
       _email = user['email'] ?? '';
       _phone = user['phone'] ?? '';
     });
@@ -81,46 +81,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 4),
             Text(
               _email,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+              ),
             ),
             if (_phone.isNotEmpty) ...[
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.phone_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     _phone,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
             ],
             const SizedBox(height: 32),
+            _buildMenuTile(Icons.person_outline, 'Edit Profil', () async {
+              await Get.to(
+                () => const EditProfileScreen(),
+                transition: Transition.fadeIn,
+              );
+              _loadUser();
+            }),
             _buildMenuTile(
-              Icons.person_outline,
-              'Edit Profil',
-              () async {
-                await Get.to(() => const EditProfileScreen(), transition: Transition.fadeIn);
-                _loadUser();
-              },
+              Icons.history,
+              'Riwayat Transaksi',
+              () => Get.to(
+                () => const TransactionHistoryScreen(),
+                transition: Transition.fadeIn,
+              ),
             ),
-            _buildMenuTile(Icons.history, 'Riwayat Transaksi',
-                () => Get.to(() => const TransactionHistoryScreen(), transition: Transition.fadeIn)),
-            _buildMenuTile(Icons.favorite_border, 'Favorit',
-                () => Get.to(() => const FavoriteScreen(), transition: Transition.fadeIn)),
-            _buildMenuTile(Icons.settings_outlined, 'Pengaturan',
-                () => Get.to(() => SettingsScreen(), transition: Transition.fadeIn)),
-            _buildMenuTile(Icons.help_outline, 'Pusat Bantuan',
-                () => Get.to(() => const HelpCenterScreen(), transition: Transition.fadeIn)),
+            _buildMenuTile(
+              Icons.favorite_border,
+              'Favorit',
+              () => Get.to(
+                () => const FavoriteScreen(),
+                transition: Transition.fadeIn,
+              ),
+            ),
+            _buildMenuTile(
+              Icons.settings_outlined,
+              'Pengaturan',
+              () =>
+                  Get.to(() => SettingsScreen(), transition: Transition.fadeIn),
+            ),
+            _buildMenuTile(
+              Icons.help_outline,
+              'Pusat Bantuan',
+              () => Get.to(
+                () => const HelpCenterScreen(),
+                transition: Transition.fadeIn,
+              ),
+            ),
             const SizedBox(height: 24),
             ListTile(
               onTap: () {
                 Get.dialog(
                   Dialog(
                     backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
@@ -132,16 +165,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.red.withAlpha((0.1 * 255).round()),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.logout, color: Colors.red, size: 32),
+                            child: const Icon(
+                              Icons.logout,
+                              color: Colors.red,
+                              size: 32,
+                            ),
                           ),
                           const SizedBox(height: 20),
-                          const Text('Keluar Akun',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Keluar Akun',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           const Text(
                             'Apakah Anda yakin ingin keluar dari akun ini?',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.textSecondary, height: 1.5),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           Row(
@@ -149,12 +194,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Expanded(
                                 child: OutlinedButton(
                                   style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    side: BorderSide(color: Colors.grey.shade300),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
                                   ),
                                   onPressed: () => Get.back(),
-                                  child: const Text('Batal',
-                                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                                  child: const Text(
+                                    'Batal',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -162,15 +216,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     elevation: 0,
                                   ),
                                   onPressed: () async {
                                     await AuthService().logout();
-                                    Get.offAll(() => LoginScreen(), transition: Transition.fadeIn);
+                                    Get.offAll(
+                                      () => LoginScreen(),
+                                      transition: Transition.fadeIn,
+                                    );
                                   },
-                                  child: const Text('Keluar',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  child: const Text(
+                                    'Keluar',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -189,8 +253,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: const Icon(Icons.logout, color: Colors.red),
               ),
-              title: const Text('Keluar',
-                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14)),
+              title: const Text(
+                'Keluar',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ],
         ),
@@ -201,7 +271,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMenuTile(IconData icon, String title, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: ListTile(
         onTap: onTap,
         leading: Container(
@@ -212,9 +285,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary)),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }

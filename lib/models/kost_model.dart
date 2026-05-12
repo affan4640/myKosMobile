@@ -40,10 +40,8 @@ class Kost {
       type: json['type'] ?? '-',
       rating: (json['rating'] ?? 0).toDouble(),
       description: json['description'],
-      latitude:
-          double.tryParse(json['latitude'].toString()) ?? 0.0,
-      longitude:
-          double.tryParse(json['longitude'].toString()) ?? 0.0,
+      latitude: double.tryParse(json['latitude'].toString()) ?? 0.0,
+      longitude: double.tryParse(json['longitude'].toString()) ?? 0.0,
     );
   }
 }
