@@ -310,7 +310,7 @@ class _KostCard extends StatelessWidget {
                       width: 120,
                       height: 120,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (context, error, stackTrace) => Container(
                         width: 120,
                         height: 120,
                         color: Colors.grey.shade200,

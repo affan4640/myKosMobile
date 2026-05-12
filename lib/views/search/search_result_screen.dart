@@ -81,8 +81,8 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _displayResults.isEmpty
-              ? _buildEmptyState()
-              : _buildListResults(),
+          ? _buildEmptyState()
+          : _buildListResults(),
     );
   }
 
@@ -142,13 +142,16 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
                         Text(
                           kost.name,
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         _buildLocationInfo(kost.location),
-                        if (kost.distance > 0) _buildDistanceInfo(kost.distance),
+                        if (kost.distance > 0)
+                          _buildDistanceInfo(kost.distance),
                         const SizedBox(height: 8),
                         _buildPriceAndRating(kost.price, kost.rating),
                       ],
@@ -172,19 +175,14 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
               width: 120,
               height: 120,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 width: 120,
                 height: 120,
                 color: Colors.grey.shade200,
                 child: const Icon(Icons.image_not_supported),
               ),
             )
-          : Image.asset(
-              url,
-              width: 120,
-              height: 120,
-              fit: BoxFit.cover,
-            ),
+          : Image.asset(url, width: 120, height: 120, fit: BoxFit.cover),
     );
   }
 
@@ -214,7 +212,10 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
         Expanded(
           child: Text(
             location,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -255,9 +256,10 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
           children: [
             const Icon(Icons.star, size: 14, color: AppColors.warning),
             const SizedBox(width: 4),
-            Text('$rating',
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(
+              '$rating',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ],
