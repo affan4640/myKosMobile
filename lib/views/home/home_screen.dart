@@ -8,6 +8,7 @@ import '../../controllers/home_controller.dart';
 
 import '../detail/detail_screen.dart';
 import '../notifications/notification_screen.dart';
+import '../search/search_all_kost_screen.dart';
 import '../search/search_screen.dart';
 import '../profile/cart_screen.dart';
 
@@ -85,8 +86,18 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                   child: TextField(
-                    readOnly: true,
-                    onTap: () => Get.to(() => SearchScreen()),
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (value) {
+                      final query = value.trim();
+                      Get.to(
+                        () => SearchAllKostScreen(
+                          initialQuery: query.isEmpty ? null : query,
+                          initialResults: homeC.allKosts.isNotEmpty
+                              ? homeC.allKosts.toList()
+                              : null,
+                        ),
+                      );
+                    },
                     decoration: InputDecoration(
                       hintText: 'Cari lokasi, nama kost, atau fasilitas',
                       hintStyle: const TextStyle(
@@ -98,16 +109,20 @@ class HomeScreen extends StatelessWidget {
                         Icons.search,
                         color: AppColors.textSecondary,
                       ),
-                      suffixIcon: Container(
-                        margin: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.tune,
-                          color: Colors.white,
-                          size: 18,
+                      suffixIcon: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Get.to(() => SearchScreen()),
+                        child: Container(
+                          margin: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.tune,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ),
@@ -154,7 +169,13 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => Get.to(() => SearchScreen()),
+                      onPressed: () => Get.to(
+                        () => SearchAllKostScreen(
+                          initialResults: homeC.allKosts.isNotEmpty
+                              ? homeC.allKosts.toList()
+                              : null,
+                        ),
+                      ),
                       child: const Text(
                         'Lihat Semua >',
                         style: TextStyle(

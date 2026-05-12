@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/main_controller.dart';
 import '../theme/app_colors.dart';
 import 'home/home_screen.dart';
-import 'search/search_screen.dart';
+import 'search/search_all_kost_screen.dart';
 import 'kost/my_kost_screen.dart';
 import 'chat/chat_screen.dart';
 import 'profile/profile_screen.dart';
@@ -14,7 +14,7 @@ class MainLayout extends StatelessWidget {
   // Dummy screens untuk tab lainnya
   final List<Widget> pages = [
     HomeScreen(),
-    SearchScreen(),
+    SearchAllKostScreen(),
     MyKostScreen(),
     ChatScreen(),
     ProfileScreen(),

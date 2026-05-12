@@ -14,7 +14,7 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final String _baseUrl = 'https://chess-gore-patience.ngrok-free.dev/api';
+  final String _baseUrl = 'http://127.0.0.1:8000/api';
   final Map<String, String> _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../models/kost_model.dart';
 import '../services/kost_service.dart';
-import '../views/search/search_result_screen.dart';
+import '../views/search/search_all_kost_screen.dart';
 
 class SearchKostController extends GetxController {
   final KostService _kostService = KostService();
@@ -125,14 +125,12 @@ class SearchKostController extends GetxController {
 
     _fetchFiltered().then((results) {
       Get.back();
-      Get.to(() => SearchResultScreen(
-            location: locationController.text.trim(),
-            type: selectedType.value,
-            minPrice: priceRange.value.start.toInt(),
-            maxPrice: priceRange.value.end.toInt(),
-            facilities: selectedFacilities.toList(),
-            results: results,
-          ));
+      Get.to(
+        () => SearchAllKostScreen(
+          initialQuery: locationController.text.trim(),
+          initialResults: results,
+        ),
+      );
     }).catchError((_) {
       Get.back();
       Get.snackbar('Error', 'Gagal memuat data kost',
